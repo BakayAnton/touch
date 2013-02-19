@@ -224,7 +224,8 @@
                         //сдвиг через транзишен
                         //$(el).css('-webkit-transform', 'translate3d(' + (currentX + carousel.shift ) + 'px, 0, 0)');
                         if (Math.abs(carousel.shift.x) > Math.abs(carousel.shift.y)){
-                            carousel.caruselTape.css('margin-left', carousel.curMargin + carousel.shift.x);
+                            //carousel.caruselTape.css('margin-left', carousel.curMargin + carousel.shift.x);
+                            carousel.caruselTape.css('position', 'relative').css('left', carousel.curMargin + carousel.shift.x);
                             e.preventDefault();
                         }
                         
