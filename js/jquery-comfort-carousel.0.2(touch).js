@@ -60,6 +60,7 @@
                 this.minMargin = - this.tapeWidth + this.stepWidth;
                 this.maxMargin = 0;
                 this.blockValue = opt.blockValue;
+                this.touchStartDate = 0;
                 this.shiftStart = {'x': 0, 'y':0};
                 this.shift = {'x': 0, 'y':0}; //величина тач сдвига
 
@@ -71,23 +72,79 @@
                 }
 
                 this.slide = function(shift){
-                    if (shift > 0) {
+                    /*if (shift > 0) {
                         this.slideLeft(shift);
                     } else if (shift < 0){
                         this.slideRight(shift);
+                    }*/
+                    if (Math.abs(shift) > this.blockValue){//если величина сдвига достаточна для прокрутки
+                        var date = Date.now(),
+                            speed = Math.abs(shift)/(date-this.touchStartDate),
+                            acceleration = 1;
+                        if (speed > 1 && speed < 2 ) {
+                            acceleration = 2;
+                        } else if (speed>=2){
+                            acceleration = 3;
+                        }
+                            console.log(speed);
+
+
+
+
+                        if (this.curMargin + shift < this.minMargin ) {//Уперлись в правый край
+                            this.caruselTape.animate({
+                                'margin-left' : (this.minMargin) +'px'
+                            });
+                        } else if (this.curMargin + shift > this.maxMargin) {
+                            this.caruselTape.animate({
+                                'margin-left' : (this.maxMargin) +'px'
+                            });
+                        } else {//прокручиваем 
+                            console.log('currMargin:'+this.curMargin+'; shift:'+shift+ ' stepWidth:'+this.stepWidth+' margin-step:'+this.curMargin%this.stepWidth);
+                            this.caruselTape.stop(false, false).animate({
+                                'margin-left' : ''+ ( -this.stepWidth + this.curMargin - shift + (this.curMargin%this.stepWidth -shift) ? -this.curMargin%this.stepWidth : 0)+ 'px'
+                            });
+
+                            /*if (this.curMargin%this.stepWidth != 0){
+                                this.caruselTape.stop(false, false).animate({
+                                    'margin-left' : '-='+ (this.stepWidth + shift + this.curMargin%this.stepWidth)+ 'px'
+                                });
+                            } else {
+                                this.caruselTape.stop(false, false).animate({
+                                    'margin-left' : '-='+ (this.stepWidth + shift)+ 'px'
+                                });
+                            }*/
+                        }
+                    } else {//возвращаем обратно
+                        this.caruselTape.animate({
+                            'margin-left' : this.curMargin - shift
+                        });
                     }
                 };
                 this.slideRight = function(shift){
                     if (shift !== undefined){//если был сдвиг тачем
                         if (Math.abs(shift) > this.blockValue){//если величина сдвига достаточна для прокрутки
+                            var date = Date.now(),
+                                speed = Math.abs(shift)/(date-this.touchStartDate),
+                                acceleration = 1;
+                            if (speed > 1 && speed < 2 ) {
+                                acceleration = 2;
+                            } else if (speed>=2){
+                                acceleration = 3;
+                            }
+                                console.log(speed);
+
+
+
+
                             if (this.curMargin + shift < this.minMargin ) {//Уперлись в правый край
                                 this.caruselTape.animate({
                                     'margin-left' : (this.minMargin) +'px'
                                 });
-                                //this.curMargin -= this.stepWidth + shift;
                             } else {//прокручиваем 
-                                //console.log(this.curMargin%this.stepWidth);
-                                if (this.curMargin%this.stepWidth != 0){
+                                
+
+                                /*if (this.curMargin%this.stepWidth != 0){
                                     this.caruselTape.stop(false, false).animate({
                                         'margin-left' : '-='+ (this.stepWidth + shift + this.curMargin%this.stepWidth)+ 'px'
                                     });
@@ -95,20 +152,14 @@
                                     this.caruselTape.stop(false, false).animate({
                                         'margin-left' : '-='+ (this.stepWidth + shift)+ 'px'
                                     });
-                                }
-                                
-                                
+                                }*/
                             }
                         } else {//возвращаем обратно
                             this.caruselTape.animate({
                                 'margin-left' : this.curMargin
                             });
                         }
-
-
-                        
                     } else {
-                        console.log(this.curMargin%this.stepWidth);
                         var correctstep = 0;
                         if (this.curMargin%this.stepWidth != 0){
                             correctstep = this.curMargin%this.stepWidth;
@@ -211,8 +262,8 @@
                         carousel.shiftStart.x = eo.pageX;
                         carousel.shiftStart.y = eo.pageY;
                         //$(this).css('-webkit-transition', 'none');
-                        t1 = Date.now();
-                        carousel.caruselTape.stop(false, false);//.css('margin-left', carousel.curMargin);
+                        carousel.touchStartDate = Date.now();
+                        carousel.caruselTape.stop(false, false);
                         carousel.curMargin = parseInt(carousel.caruselTape.css('margin-left'));
                     },
                     // move
@@ -221,19 +272,18 @@
                         carousel.shift.x = eo.pageX - carousel.shiftStart.x;
                         carousel.shift.y = eo.pageY - carousel.shiftStart.y;
 
-                        //сдвиг через транзишен
-                        //$(el).css('-webkit-transform', 'translate3d(' + (currentX + carousel.shift ) + 'px, 0, 0)');
                         if (Math.abs(carousel.shift.x) > Math.abs(carousel.shift.y)){
-                            //carousel.caruselTape.css('margin-left', carousel.curMargin + carousel.shift.x);
-                            carousel.caruselTape.css('position', 'relative').css('left', carousel.curMargin + carousel.shift.x);
+                            carousel.caruselTape.css('margin-left', carousel.curMargin + carousel.shift.x);
                             e.preventDefault();
+                            console.log(parseInt(carousel.caruselTape.css('margin-left')));
                         }
                         
                         //console.log('touch move '+carousel.shift);
                     },
                     // end
                     'touchend.touchSlides': function(e) {
-                        //carousel.slide(carousel.shift.x);
+                        carousel.curMargin = parseInt(carousel.caruselTape.css('margin-left'));
+                        carousel.slide(carousel.shift.x);
                     },
                 });
             
